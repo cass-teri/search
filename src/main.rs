@@ -160,13 +160,14 @@ fn search_filename(search_term: &str, file_path: &str) {
     match index {
         Some(index) => {
             let path_without_name = &path.to_str().unwrap();
-            let path_without_name_index = path_without_name.rfind(|x| x == '/').unwrap();
+            let sep = std::path::MAIN_SEPARATOR;
+            let path_without_name_index = path_without_name.rfind(|x| x == sep).unwrap();
             let path_without_name = &path_without_name[..path_without_name_index];
             let start = &file_name[0..index];
             let middle = search_term.green().bold();
             let end = index + &search_term.len();
             let end = &file_name[end..];
-            println!("{path_without_name}/{start}{middle}{end}");
+            println!("{path_without_name}{sep}{start}{middle}{end}");
         }
         None => (),
     };
