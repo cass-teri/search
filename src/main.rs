@@ -17,6 +17,10 @@ struct Args {
     /// Should the program search the contents of the files [default:false]
     #[arg(short, long, default_value = "false")]
     contents: bool,
+
+    /// Should skip node_modules, .git, .cargo
+    #[arg(short, long, default_value = "false")]
+    should_skip: bool,
 }
 
 fn main() {
@@ -28,11 +32,25 @@ fn main() {
         root_directory = Path::new(&args.directory).to_str().unwrap()
     }
 
-    search_directory(&args.search_term, root_directory, args.contents);
+    search_directory(
+        &args.search_term,
+        root_directory,
+        args.contents,
+        args.should_skip,
+    );
     // search
 }
 
-fn search_directory(search_term: &str, directory: &str, should_search_contents: bool) {
+fn search_directory(
+    search_term: &str,
+    directory: &str,
+    should_search_contents: bool,
+    should_skip_dev_directories: bool,
+) {
+    if should_skip_dev_directories && is_dev_directory(directory) {
+        return;
+    }
+
     let dir_reader = std::fs::read_dir(directory);
 
     match dir_reader {
@@ -49,6 +67,7 @@ fn search_directory(search_term: &str, directory: &str, should_search_contents: 
                                         search_term,
                                         dir_entry.path().to_str().unwrap(),
                                         should_search_contents,
+                                        should_skip_dev_directories,
                                     )
                                 } else if should_search_contents {
                                     search_file_contents(
@@ -65,6 +84,17 @@ fn search_directory(search_term: &str, directory: &str, should_search_contents: 
             }
         }
         _ => {}
+    }
+}
+
+fn is_dev_directory(directory: &str) -> bool {
+    let dir_path = Path::new(directory);
+    let file_name = dir_path.file_name().unwrap().to_str().unwrap();
+    match file_name {
+        "node_modules" => true,
+        ".git" => true,
+        ".cargo" => true,
+        _ => false,
     }
 }
 
